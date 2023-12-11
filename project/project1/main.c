@@ -37,47 +37,41 @@ float oDuration[] = {
 };
 
 
-//Notes for shooting stars
-
-int sMelody[] = {
-
-  311,
-  0,
-  311,
-  0,
-  329,
-  0,
-  493,
-  415
-  
+// Notes for Lavender Town melody
+int lMelody[] = {
+  523, 0,   // C5
+  587, 0,   // D5
+  659, 0,   // E5
+  698, 0,   // F5
+  784, 0,   // G5
+  880, 0,   // A5
+  988, 0,   // B5
+  1047      // C6
 };
-float sDuration[] = {
-
-  .75,
-  .5,  // 0
-  .5,
-  .5, //0
-  .5,
-  .5, //0
-  .5,
-  .25
+float lDuration[] = {
+  0.5, 0.5, // C5
+  0.5, 0.5, // D5
+  0.5, 0.5, // E5
+  0.5, 0.5, // F5
+  0.5, 0.5, // G5
+  0.5, 0.5, // A5
+  0.5, 0.5, // B5
+  0.5      // C6
 };
 
 
-void play_stars(int melody[], float duration[],char play_m){
-
-  if (play_m == 's') {
-    play_note(melody[temp] * 3,duration[temp]);
+void play_lavender(int melody[], float duration[], char play_m) {
+  if (play_m == 'l') {
+    play_note(melody[temp], duration[temp]);
     temp++;
-    if(temp > 7) {
+    if (temp >= sizeof(lMelody) / sizeof(lMelody[0])) {
       temp = 0;
-      play_stars(melody,duration,' ');
+      play_lavender(melody, duration, ' ');
       return;
-    }else{
-      play_stars(melody,duration,'s');
+    } else {
+      play_lavender(melody, duration, 'l');
     }
   }
-    
 }
 
 void play_ocarina(int melody[], float duration[], char play_m) {
@@ -205,11 +199,10 @@ void __interrupt_vec(WDT_VECTOR) WDT(){    /* 250 interrupts/sec */
   set_switches_states();
 }
 
-  else if(states[4]){
-    toggle_green();
-    play_stars(sMelody,sDuration,'s');
-    play_stars(sMelody,sDuration,'s');
-    toggle_green();
-    set_switches_states();
-  }
+  else if (states[4]) {
+  toggle_green();
+  play_lavender(lMelody, lDuration, 'l');
+  toggle_green();
+  set_switches_states();
+}
 }
