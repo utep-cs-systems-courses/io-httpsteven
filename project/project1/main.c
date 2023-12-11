@@ -14,15 +14,26 @@ int* states;
 char play_m = ' ';
 
 //Notes for Megalovania and note length
+// Notes for Ocarina of Time melody
 int oMelody[] = {
-  784, 0, 784, 0, 784, 0, 659, 0, 784, 0, 659, 0, 659,
+  659, 0,   // E5
+  659, 0,   // E5
+  698, 0,   // F5
+  784, 0,   // G5
+  659, 0,   // E5
+  698, 0,   // F5
+  784, 0,   // G5
+  880      // A5
 };
 float oDuration[] = {
-
-0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-
-
-  
+  0.5, 0.5, // E5
+  0.5, 0.5, // E5
+  0.5, 0.5, // F5
+  0.5, 0.5, // G5
+  0.5, 0.5, // E5
+  0.5, 0.5, // F5
+  0.5, 0.5, // G5
+  0.5      // A5
 };
 
 
@@ -71,9 +82,9 @@ void play_stars(int melody[], float duration[],char play_m){
 
 void play_ocarina(int melody[], float duration[], char play_m) {
   if (play_m == 'o') {
-    play_note(melody[temp] * 4, duration[temp]);
+    play_note(melody[temp], duration[temp]);
     temp++;
-    if (temp > 63) {
+    if (temp >= sizeof(oMelody) / sizeof(oMelody[0])) {
       temp = 0;
       play_ocarina(melody, duration, ' ');
       return;
@@ -82,7 +93,6 @@ void play_ocarina(int melody[], float duration[], char play_m) {
     }
   }
 }
-
 
 
 int main() {
@@ -188,14 +198,12 @@ void __interrupt_vec(WDT_VECTOR) WDT(){    /* 250 interrupts/sec */
   
 
   
-  else if(states[3]){
-    toggle_green();
-    play_ocarina(oMelody,oDuration,'m');
-    play_ocarina(oMelody,oDuration,'m');
-    toggle_green();
-    set_switches_states();
-    //secondCount++;
-   }
+  else if (states[3]) {
+  toggle_green();
+  play_ocarina(oMelody, oDuration, 'o');
+  toggle_green();
+  set_switches_states();
+}
 
   else if(states[4]){
     toggle_green();
