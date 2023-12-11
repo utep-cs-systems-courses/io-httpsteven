@@ -14,53 +14,21 @@ int* states;
 char play_m = ' ';
 
 //Notes for Megalovania and note length
-int mMelody[] = {
-
-  293.66, 
-  0,
-  440.00, 
-  0,
-  493.88, 
-  0,
-  392.00, 
-  0,
-  293.66, 
-  0,
-  440.00, 
-  0,
-  493.88, 
-  0,
-  392.00, 
-  0,
-  329.63, 
-  0,
-  293.66, 
-  0
-
- 
+int oMelody[] = {
+  784, 0, 784, 0, 784, 0, 659, 0, 784, 0, 659, 0, 659, 0, 698, 0,
+  523, 0, 587, 0, 523, 0, 523, 0, 587, 0, 659, 0, 698, 0, 784, 0,
+  784, 0, 523, 0, 587, 0, 659, 0, 784, 0, 784, 0, 523, 0, 587, 0,
+  659, 0, 659, 0, 698, 0, 523, 0, 587, 0, 659, 0, 698, 0, 784, 0
 };
-float mDuration[] = {
+float oDuration[] = {
 
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25,
-  0.25, 
-  0.25
+0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
+
+
   
 };
 
@@ -108,21 +76,20 @@ void play_stars(int melody[], float duration[],char play_m){
     
 }
 
-void play_megalovania(int melody[], float duration[],char play_m){
-  
-  if (play_m == 'm') {
-    play_note(melody[temp] * 4,duration[temp]);
+void play_ocarina(int melody[], float duration[], char play_m) {
+  if (play_m == 'o') {
+    play_note(melody[temp] * 4, duration[temp]);
     temp++;
-    if(temp > 18) {
+    if (temp > 63) {
       temp = 0;
-      play_megalovania(melody,duration,' ');
+      play_ocarina(melody, duration, ' ');
       return;
-    }else{
-      play_megalovania(melody,duration,'m');
+    } else {
+      play_ocarina(melody, duration, 'o');
     }
   }
-    
 }
+
 
 
 int main() {
@@ -230,8 +197,8 @@ void __interrupt_vec(WDT_VECTOR) WDT(){    /* 250 interrupts/sec */
   
   else if(states[3]){
     toggle_green();
-    play_megalovania(mMelody,mDuration,'m');
-    play_megalovania(mMelody,mDuration,'m');
+    play_ocarina(mMelody,mDuration,'m');
+    play_ocarina(mMelody,mDuration,'m');
     toggle_green();
     set_switches_states();
     //secondCount++;
