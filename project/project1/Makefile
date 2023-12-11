@@ -1,17 +1,20 @@
 # Makefile configuration
 
 COMMON_OBJECTS  = main.o switches.o buzzer.o 
-CPU             = msp430g2553
-CFLAGS          = -mmcu=${CPU} -I../h
-LDFLAGS		    = -L/opt/ti/msp430_gcc/include
 
-# switch the compiler (for the internal make rules)
+CPU             = msp430g2553
+
+CFLAGS          = -mmcu=${CPU} -I../h
+
+LDFLAGS		= -L/opt/ti/msp430_gcc/include
+
+#switch the compiler (for the internal make rules)
 CC              = msp430-elf-gcc
 AS              = msp430-elf-as
 
 all: project-c.elf project-s.elf
 
-# additional rules for files
+#additional rules for files
 
 project-c.elf: ${COMMON_OBJECTS} led-c.o
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^ ../lib/libTimer.a
