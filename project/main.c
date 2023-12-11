@@ -1,124 +1,109 @@
-// main.c
-
 #include <msp430.h>
 #include "libTimer.h"
 #include "buzzer.h"
 
-// Define states
-enum States {
-    IDLE,
-    SOUND_1,
-    SOUND_2,
-    SOUND_3,
-    SOUND_4,
-    // Add more states as needed
-};
+#define LED_RED BIT0               // P1.0
+#define LED_GREEN BIT6             // P1.6
+#define LEDS (LED_RED | LED_GREEN)
 
-// Global variables
-enum States currentState = IDLE;
+#define SW1 BIT3		/* switch1 is p1.3 */
+#define SW2 BIT4		/* switch2 is p1.4 */
+#define SW3 BIT5		/* switch3 is p1.5 */
+#define SW4 BIT6		/* switch4 is p1.6 */
+#define SWITCHES (SW1 | SW2 | SW3 | SW4)	/* 4 switches on this board */
 
-// Function to handle button press
-void buttonPressHandler(int button) {
-    // Transition to a new state based on the pressed button
-    switch (button) {
-        case 0:
-            currentState = IDLE;
-            break;
-        case 1:
-            currentState = SOUND_1;
-            break;
-        case 2:
-            currentState = SOUND_2;
-            break;
-        case 3:
-            currentState = SOUND_3;
-            break;
-        case 4:
-            currentState = SOUND_4;
-            break;
-        // Add more cases as needed
-    }
+#define BUZZER BIT2  // Buzzer is connected to P1.2
+
+void switch_init() {
+  P1REN |= SWITCHES;		/* enables resistors for switches */
+  P1IE |= SWITCHES;		/* enable interrupts from switches */
+  P1OUT |= SWITCHES;		/* pull-ups for switches */
+  P1DIR &= ~SWITCHES;		/* set switches' bits for input */
 }
 
-// Function to handle button release
-void buttonReleaseHandler() {
-    // Transition back to the original state
-    currentState = IDLE;
+void buzzer_init() {
+  P1DIR |= BUZZER;
+  P1SEL |= BUZZER;  // Select Timer A output for the buzzer pin
 }
 
-// Function to update the state machine
-void updateStateMachine() {
-    // Implement logic based on the current state
-    switch (currentState) {
-        case IDLE:
-            // Perform actions for the IDLE state
-            P1OUT &= ~LED_RED; // Turn off red LED
-            P1OUT &= ~LED_GREEN; // Turn off green LED
-            buzzer_set_period(0); // Turn off the buzzer
-            break;
-        case SOUND_1:
-            // Perform actions for the SOUND_1 state
-            P1OUT |= LED_RED; // Turn on red LED
-            P1OUT &= ~LED_GREEN; // Turn off green LED
-            buzzer_set_period(1000); // Set buzzer frequency for sound 1
-            break;
-        case SOUND_2:
-            // Perform actions for the SOUND_2 state
-            P1OUT &= ~LED_RED; // Turn off red LED
-            P1OUT |= LED_GREEN; // Turn on green LED
-            buzzer_set_period(2000); // Set buzzer frequency for sound 2
-            break;
-        case SOUND_3:
-            // Perform actions for SOUND_3
-            P1OUT ^= LED_RED; // Toggle red LED
-            P1OUT ^= LED_GREEN; // Toggle green LED
-            buzzer_set_period(1500); // Set buzzer frequency for sound 3
-            break;
-
-        case SOUND_4:
-            // Perform actions for SOUND_4
-            P1OUT |= LED_RED; // Turn on red LED
-            P1OUT |= LED_GREEN; // Turn on green LED
-            buzzer_set_period(2500); // Set buzzer frequency for sound 4
-            break;
-
-        // Add more cases for other states
-    }
+void led_init() {
+  P1DIR |= LEDS;
+  P1OUT &= ~LEDS;		/* leds initially off */
 }
 
-int main(void) {
-    // Stop watchdog timer
-    WDTCTL = WDTPW | WDTHOLD;
+void wdt_init() {
+  configureClocks();		/* setup master oscillator, CPU & peripheral clocks */
+  enableWDTInterrupts();	/* enable periodic interrupt */
+}
 
-    // Configure clocks and ports
-    configureClocks();
-    P1DIR |= LED_RED | LED_GREEN;
-    P1OUT &= ~(LED_RED | LED_GREEN);
+// Function to play a tone on the buzzer
+void play_tone(int frequency) {
+  buzzer_set_period(2000000 / frequency);  // Assuming a 2MHz clock frequency
+}
 
-    // Initialize buzzer
-    buzzer_init();
+void main(void) 
+{  
+  switch_init();
+  buzzer_init();
+  led_init();
+  wdt_init();
+    
+  or_sr(0x18);  // CPU off, GIE on
+} 
 
-    // Main loop
-    while (1) {
-        // Update the state machine
-        updateStateMachine();
+static int buttonDown;
+static int state = 0;  // State machine variable
 
-        // Check for button press and release
-        for (int button = 0; button < 4; button++) {
-            if (!(P2IN & (BIT0 << button))) {
-                buttonPressHandler(button);
-                __delay_cycles(100000); // Debounce delay
-            }
-        }
+void switch_interrupt_handler()
+{
+  char p1val = P1IN;
 
-        // Check for button release (assuming only one button can be pressed at a time)
-        if (P2IN & (BIT0 | BIT1 | BIT2 | BIT3)) {
-            buttonReleaseHandler();
-        }
+  P1IES |= (p1val & SWITCHES);	/* if switch up, sense down */
+  P1IES &= (p1val | ~SWITCHES);	/* if switch down, sense up */
 
-        // Add a delay or use timers to control the timing of the state machine
-        __delay_cycles(100000); // Adjust this delay as needed
-    }
+  // Handle each button press based on the state
+  switch (state) {
+    case 0:  // State 0
+      if (p1val & SW1) {
+        play_tone(1000);
+      } else if (p1val & SW2) {
+        play_tone(1500);
+      } else if (p1val & SW3) {
+        play_tone(2000);
+      } else if (p1val & SW4) {
+        play_tone(2500);
+      }
+      break;
 
-    return 0;
+    // Add more cases as needed for different states
+
+    default:
+      break;
+  }
+}
+
+void __interrupt_vec(PORT1_VECTOR) Port_1(){
+  if (P1IFG & SWITCHES) {
+    P1IFG &= ~SWITCHES;
+    switch_interrupt_handler();
+  }
+}
+
+void __interrupt_vec(WDT_VECTOR) WDT()
+{
+  static int blink_count = 0;
+  switch (blink_count) { 
+    case 6: 
+      blink_count = 0;
+      P1OUT |= LED_RED;
+      play_tone(1500);
+      break;
+    default:
+      blink_count ++;
+      if (!buttonDown) {
+        P1OUT &= ~LED_RED;
+        // Stop the buzzer when the button is down
+        buzzer_set_period(0);
+      }
+  }
 }

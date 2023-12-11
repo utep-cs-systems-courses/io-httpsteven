@@ -1,6 +1,5 @@
-# Makefile for MSP430
-
-COMMON_OBJECTS  =
+# Makefile configuration
+COMMON_OBJECTS  = main.o libTimer.o buzzer.o
 CPU             = msp430g2553
 CFLAGS          = -mmcu=${CPU} -I../h
 LDFLAGS         = -L/opt/ti/msp430_gcc/include
@@ -9,14 +8,17 @@ LDFLAGS         = -L/opt/ti/msp430_gcc/include
 CC              = msp430-elf-gcc
 AS              = msp430-elf-as
 
-all: toy.elf
+# Target executable
+TARGET          = main.elf
+
+all: ${TARGET}
 
 # Additional rules for files
-toy.elf: ${COMMON_OBJECTS} libTimer.o buzzer.o main.o ../lib/libTimer.a
+${TARGET}: ${COMMON_OBJECTS} ../lib/libTimer.a
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^
 
-load: toy.elf
-	msp430loader.sh toy.elf
+load: ${TARGET}
+	msp430loader.sh $^
 
 clean:
 	rm -f *.o *.elf
